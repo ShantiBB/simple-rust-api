@@ -1,0 +1,5 @@
+database:
+  url: "postgres://postgres:1221@localhost/items?connect_timeout=2"
+
+web:
+  addr: "127.0.0.1:8090"
