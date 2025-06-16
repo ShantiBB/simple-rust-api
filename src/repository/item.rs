@@ -9,7 +9,7 @@ impl PostgresRepository {
             r#"
                 INSERT INTO items (name, description)
                 VALUES ($1, $2)
-                RETURNING id, name, description
+                RETURNING id, name, description, created_at, updated_at
             "#
         )
         .bind(input.name).bind(input.description)
@@ -22,8 +22,9 @@ impl PostgresRepository {
     pub async fn get_all_items(&self) -> Result<Vec<Item>, Error> {
         let items = query_as::<_, Item>(
             r#"
-                SELECT id, name, description
+                SELECT id, name, description, created_at, updated_at
                 FROM items
+                ORDER BY created_at DESC
             "#
         )
         .fetch_all(&self.pool)
@@ -35,7 +36,7 @@ impl PostgresRepository {
     pub async fn get_item_by_id(&self, id: i32) -> Result<Option<Item>, Error> {
         let item = query_as::<_, Item>(
             r#"
-                SELECT id, name, description
+                SELECT id, name, description, created_at, updated_at
                 FROM items
                 WHERE id = $1
             "#
@@ -47,21 +48,22 @@ impl PostgresRepository {
         Ok(item)
     }
 
-    pub async fn update_item_by_id(&self, input: &Item) -> Result<bool, Error> {
-        let res = query(
+    pub async fn update_item_by_id(&self, id: i32, input: &ItemPayload) -> Result<Option<Item>, Error> {
+        let item = query_as::<_, Item>(
             r#"
-            UPDATE items
-            SET name = $1, description = $2
-            WHERE id = $3
-        "#
+                UPDATE items
+                SET name = $1, description = $2, updated_at = NOW()
+                WHERE id = $3
+                RETURNING id, name, description, created_at, updated_at
+            "#
         )
-            .bind(&input.name)
-            .bind(&input.description)
-            .bind(input.id)
-            .execute(&self.pool)
-            .await?;
+        .bind(&input.name)
+        .bind(&input.description)
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
 
-        Ok(res.rows_affected() > 0)
+        Ok(item)
     }
 
     pub async fn delete_item_by_id(&self, id: i32) -> Result<bool, Error> {

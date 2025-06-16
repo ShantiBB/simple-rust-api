@@ -4,10 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-native-tls"] }
+sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-native-tls", "migrate", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0"
 anyhow = "1.0.98"
 serde_yaml = "0.9.34+deprecated"
-axum = "0.8.4"
+actix-web = "4.4"
+actix-rt = "2.9"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-tower-http = { version = "0.6.6", features = ["timeout"] }
+futures = "0.3"
+env_logger = "0.10"
+log = "0.4"
